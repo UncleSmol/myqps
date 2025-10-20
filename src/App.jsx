@@ -9,6 +9,8 @@ import Resources from './pages/Resources';
 import Forum from './pages/Forum';
 import Affiliates from './pages/Affiliates';
 import NotFound from './components/NotFound';
+import MyProfile from './pages/MyProfile';
+import Contact from './pages/Contact';
 
 const App = () => {
   return (
@@ -21,6 +23,8 @@ const App = () => {
         <Route path="/services" element={<Services />} />
         <Route path="/resources" element={<Resources />} />
         <Route path="/forum" element={<Forum />} />
+        <Route path="/my-profile" element={<MyProfile />} />
+        <Route path="/contact" element={<Contact />} />
         <Route path="/affiliates" element={<Affiliates />} />
 
         <Route path="*" element={<NotFound />} />

@@ -1,11 +1,15 @@
-import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import '../styles/Navigation.css';
 import AppLogo from '../assets/MyQps-Logo.svg';
 import DevSig from '../assets/dev-doc-logo.svg';
 
 const Navigation = () => {
+  const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const navItems = [
     { label: 'Homepage', icon: 'house', path: '/' },
@@ -19,57 +23,128 @@ const Navigation = () => {
 
   const rightIcons = [
     { icon: 'search', action: 'search', label: 'Search' },
-    { icon: 'bell', action: 'notifications', label: 'Notifications' },
     { icon: 'person', action: 'profile', label: 'Profile' },
   ];
 
-  // Hamburger menu animation variants
+  // Close menu when route changes
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [navigate]);
+
+  // Close search when menu opens and vice versa
+  useEffect(() => {
+    if (isMenuOpen) {
+      setIsSearchOpen(false);
+    }
+  }, [isMenuOpen]);
+
+  useEffect(() => {
+    if (isSearchOpen) {
+      setIsMenuOpen(false);
+    }
+  }, [isSearchOpen]);
+
+  const handleNavClick = (path) => {
+    navigate(path);
+    setIsMenuOpen(false);
+  };
+
+  const handleSearchToggle = () => {
+    setIsSearchOpen(!isSearchOpen);
+  };
+
+  const handleProfileClick = () => {
+    navigate('/my-profile');
+  };
+
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    // Handle search logic
+    console.log('Searching for:', searchTerm);
+    setIsSearchOpen(false);
+    setSearchTerm('');
+  };
+
+  // Hamburger animation
   const hamburgerVariants = {
     open: {
+      transition: {
+        staggerChildren: 0.1,
+      },
+    },
+    closed: {
+      transition: {
+        staggerChildren: 0.1,
+        staggerDirection: -1,
+      },
+    },
+  };
+
+  const lineVariants = {
+    open: {
       rotate: 45,
-      transition: { duration: 0.3 },
+      y: 6,
     },
     closed: {
       rotate: 0,
-      transition: { duration: 0.3 },
+      y: 0,
     },
   };
 
-  const hamburgerLineVariants = {
-    open: (custom) => ({
-      opacity: custom === 2 ? 0 : 1,
-      y: custom === 1 ? 7 : custom === 3 ? -7 : 0,
-      transition: { duration: 0.3 },
-    }),
-    closed: (custom) => ({
+  const lineVariants2 = {
+    open: {
+      opacity: 0,
+    },
+    closed: {
       opacity: 1,
-      y: 0,
-      transition: { duration: 0.3 },
-    }),
+    },
   };
 
-  const menuVariants = {
+  const lineVariants3 = {
+    open: {
+      rotate: -45,
+      y: -6,
+    },
     closed: {
-      opacity: 0,
-      y: -20,
-      pointerEvents: 'none',
+      rotate: 0,
+      y: 0,
+    },
+  };
+
+  // Mobile menu variants
+  const mobileMenuVariants = {
+    closed: {
+      x: '-100%',
+      transition: {
+        type: 'spring',
+        stiffness: 400,
+        damping: 40,
+      },
     },
     open: {
-      opacity: 1,
-      y: 0,
-      pointerEvents: 'auto',
+      x: 0,
+      transition: {
+        type: 'spring',
+        stiffness: 400,
+        damping: 40,
+      },
     },
   };
 
-  const navItemVariants = {
-    initial: { opacity: 0, y: -10 },
-    animate: (i) => ({
+  // Search dropdown variants
+  const searchVariants = {
+    closed: {
+      height: 0,
+      opacity: 0,
+    },
+    open: {
+      height: 'auto',
       opacity: 1,
-      y: 0,
-      transition: {
-        delay: i * 0.08,
-      },
-    }),
+    },
   };
 
   return (
@@ -77,77 +152,72 @@ const Navigation = () => {
       <nav className="nav">
         {/* App Logo */}
         <div className="logo-container">
-          <img src={AppLogo} alt="MyQps" className="app-logo" />
+          <button
+            className="logo-btn"
+            onClick={() => handleNavClick('/')}
+            aria-label="Home"
+          >
+            <img src={AppLogo} alt="MyQps" className="app-logo" />
+          </button>
         </div>
 
         {/* Desktop Navigation Links */}
         <div className="nav-links">
           {navItems.map((item, index) => (
-            <motion.a
+            <button
               key={item.label}
-              href={item.path}
+              onClick={() => handleNavClick(item.path)}
               className="nav-link"
-              custom={index}
-              initial="initial"
-              animate="animate"
-              variants={navItemVariants}
-              whileHover={{ x: 4 }}
             >
               <i className={`bi bi-${item.icon} nav-icon`}></i>
               <span>{item.label}</span>
-            </motion.a>
+            </button>
           ))}
         </div>
 
         {/* Right Side Icons */}
         <div className="nav-right">
           {rightIcons.map((item) => (
-            <motion.button
+            <button
               key={item.label}
-              className={`icon-btn ${
-                item.action === 'notifications' ? 'has-badge' : ''
-              }`}
+              className="icon-btn"
               onClick={() => {
-                if (item.action === 'search') setIsSearchOpen(!isSearchOpen);
+                if (item.action === 'search') {
+                  handleSearchToggle();
+                } else if (item.action === 'profile') {
+                  handleProfileClick();
+                }
               }}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
+              aria-label={item.label}
             >
               <i className={`bi bi-${item.icon}`}></i>
-              {item.action === 'notifications' && (
-                <span className="badge">3</span>
-              )}
-            </motion.button>
+            </button>
           ))}
 
-          {/* Animated Mobile Menu Toggle */}
+          {/* Mobile Menu Toggle */}
           <motion.button
             className="mobile-toggle"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            whileTap={{ scale: 0.95 }}
+            aria-label="Toggle menu"
+            aria-expanded={isMenuOpen}
           >
             <motion.div
               className="hamburger-container"
               variants={hamburgerVariants}
+              initial="closed"
               animate={isMenuOpen ? 'open' : 'closed'}
             >
               <motion.span
                 className="hamburger-line"
-                custom={1}
-                variants={hamburgerLineVariants}
-                animate={isMenuOpen ? 'open' : 'closed'}
+                variants={lineVariants}
               />
               <motion.span
                 className="hamburger-line"
-                custom={2}
-                variants={hamburgerLineVariants}
-                animate={isMenuOpen ? 'open' : 'closed'}
+                variants={lineVariants2}
               />
               <motion.span
                 className="hamburger-line"
-                custom={3}
-                variants={hamburgerLineVariants}
-                animate={isMenuOpen ? 'open' : 'closed'}
+                variants={lineVariants3}
               />
             </motion.div>
           </motion.button>
@@ -155,55 +225,87 @@ const Navigation = () => {
       </nav>
 
       {/* Search Dropdown */}
-      <motion.div
-        className="search-dropdown"
-        variants={menuVariants}
-        initial="closed"
-        animate={isSearchOpen ? 'open' : 'closed'}
-      >
-        <div className="search-container">
-          <i className="bi bi-search search-icon"></i>
-          <input
-            type="text"
-            className="search-input"
-            placeholder="Search papers, resources..."
-          />
-        </div>
-      </motion.div>
+      <AnimatePresence>
+        {isSearchOpen && (
+          <motion.div
+            className="search-dropdown"
+            variants={searchVariants}
+            initial="closed"
+            animate="open"
+            exit="closed"
+            transition={{ duration: 0.3 }}
+          >
+            <form onSubmit={handleSearchSubmit} className="search-container">
+              <i className="bi bi-search search-icon"></i>
+              <input
+                type="text"
+                className="search-input"
+                placeholder="Search papers, resources..."
+                value={searchTerm}
+                onChange={handleSearchChange}
+                autoFocus
+              />
+              {searchTerm && (
+                <button
+                  type="button"
+                  className="search-clear"
+                  onClick={() => setSearchTerm('')}
+                >
+                  <i className="bi bi-x"></i>
+                </button>
+              )}
+            </form>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Mobile Navigation Menu */}
-      <motion.div
-        className="mobile-menu"
-        variants={menuVariants}
-        initial="closed"
-        animate={isMenuOpen ? 'open' : 'closed'}
-      >
-        {navItems.map((item) => (
-          <motion.a
-            key={item.label}
-            href={item.path}
-            className="mobile-nav-link"
-            whileHover={{ x: 8 }}
-            onClick={() => setIsMenuOpen(false)}
-          >
-            <i className={`bi bi-${item.icon} mobile-nav-icon`}></i>
-            <span>{item.label}</span>
-          </motion.a>
-        ))}
+      <AnimatePresence>
+        {isMenuOpen && (
+          <>
+            <motion.div
+              className="mobile-menu-overlay"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMenuOpen(false)}
+            />
+            <motion.div
+              className="mobile-menu"
+              variants={mobileMenuVariants}
+              initial="closed"
+              animate="open"
+              exit="closed"
+            >
+              <div className="mobile-menu-content">
+                {navItems.map((item) => (
+                  <button
+                    key={item.label}
+                    onClick={() => handleNavClick(item.path)}
+                    className="mobile-nav-link"
+                  >
+                    <i className={`bi bi-${item.icon} mobile-nav-icon`}></i>
+                    <span>{item.label}</span>
+                  </button>
+                ))}
 
-        {/* DevSig - Only visible on mobile */}
-        <div className="devsig-container">
-          <div className="developed-by-text">Developed By</div>
-          <a
-            href="https://unclesmol.github.io/dev-doc"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="devsig-link"
-          >
-            <img src={DevSig} alt="Dev Documentation" className="devsig-logo" />
-          </a>
-        </div>
-      </motion.div>
+                {/* DevSig - Only visible on mobile */}
+                <div className="devsig-container">
+                  <div className="developed-by-text">Developed By</div>
+                  <a
+                    href="https://unclesmol.github.io/dev-doc"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="devsig-link"
+                  >
+                    <img src={DevSig} alt="Dev Documentation" className="devsig-logo" />
+                  </a>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </header>
   );
 };
